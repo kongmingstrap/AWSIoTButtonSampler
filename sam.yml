@@ -4,14 +4,6 @@ Transform: AWS::Serverless-2016-10-31
 Description: Lambda Stack
 
 Parameters:
-  ChatWorkToken:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: ChatWorkToken
-
-  ChatworkRoomId:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: ChatworkRoomId
-
   SlackWebhookURL:
     Type: AWS::SSM::Parameter::Value<String>
     Default: SlackWebhookURL
@@ -30,8 +22,6 @@ Resources:
       Role: !GetAtt MessageNotiferFunctionRole.Arn
       Environment:
         Variables:
-          CHATWORK_TOKEN: !Sub '${ChatWorkToken}'
-          CHATWORK_ROOM_ID: !Sub '${ChatworkRoomId}'
           SLACK_WEBHOOK_URL: !Sub '${SlackWebhookURL}'
           DATABASE_NAME: room_table
 
@@ -50,9 +40,6 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-        - arn:aws:iam::aws:policy/AmazonAthenaFullAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
 
   RoomTable:
     Type: AWS::DynamoDB::Table
