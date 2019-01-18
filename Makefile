@@ -7,19 +7,21 @@ localstack-stop:
 	@docker-compose stop localstack
 
 lint:
-	@python -m flake8 src
+	@python -m flake8 \
+		src \
+		tests
 
 unit-test:
-	@for handler in $$(find src -maxdepth 3 -type d -name 'tests'); do \
-		pwd_dir=$$PWD; \
-		handler_dir=$$(dirname $$handler); \
-		handler_name=$$(basename $$(dirname $$handler)); \
-		cd $$handler_dir && \
-			AWS_DEFAULT_REGION=ap-northeast-1 \
-			AWS_ACCESS_KEY_ID=dummy \
-			AWS_SECRET_ACCESS_KEY=dummy \
-			python -m pytest tests; \
-		cd $$pwd_dir; \
+	@for test_dir in $$(find tests/unit -maxdepth 1 -type d); do \
+		handler=$$(basename $$test_dir); \
+		if [[ $$handler =~ unit|__pycache__|fixtures ]]; then continue; fi; \
+		python_path=src/handlers/$$handler; \
+		proj=src/handlers/$$handler; \
+		AWS_DEFAULT_REGION=ap-northeast-1 \
+		AWS_ACCESS_KEY_ID=dummy \
+		AWS_SECRET_ACCESS_KEY=dummy \
+		PYTHONPATH=$$python_path \
+			python -m pytest tests/unit/$$handler --cov-config=./setup.cfg --cov=$$proj -vv; \
 	done
 
 validate:
