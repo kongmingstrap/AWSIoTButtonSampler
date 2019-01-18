@@ -29,14 +29,14 @@ validate:
 deploy:
 	@aws cloudformation package \
 						--template-file sam.yml \
-						--s3-bucket sampler-sam-artifacts-$$(aws sts get-caller-identity | jq .Account | sed 's/\"//g')-us-west-2 \
+						--s3-bucket sam-artifacts-$$(aws sts get-caller-identity | jq .Account | sed 's/\"//g')-ap-northeast-1 \
 						--output-template-file template.yml
 
 	@aws cloudformation deploy \
 						--template-file template.yml \
 						--stack-name iot-button-functions \
 						--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-						--role-arn arn:aws:iam::$$(aws sts get-caller-identity | jq .Account | sed 's/\"//g'):role/sampler-iam/sam-deploy-role \
+						--role-arn arn:aws:iam::$$(aws sts get-caller-identity | jq .Account | sed 's/\"//g'):role/sam-deploy/sam-deploy-role \
 						--no-fail-on-empty-changeset
 
 .PHONY: \

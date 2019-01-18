@@ -12,75 +12,33 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: ChatworkRoomId
 
-  IoTButtonDSN:
+  SlackWebhookURL:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: IoTButtonDSN
-    Description: The device serial number (DSN) of the AWS IoT Button. This can be
-      found on the back of the button. The DSN must match the pattern of 'G030[A-Z][A-Z][0=9][0-9][0-9][0-5][0-9][1-7][0-9A-HJ-NP-X][0-9A-HJ-NP-X][0-9A-HJ-NP-X][0-9A-HJ-NP-X]'.
-
-  CertificateARN:
-    Type: AWS::SSM::Parameter::Value<String>
-    Default: CertificateARN
-    Description: The Amazon Resource Name (ARN) of the existing AWS IoT certificate.
+    Default: SlackWebhookURL
 
 Resources:
-  IoTThing:
-    Type: AWS::IoT::Thing
-    Properties:
-      ThingName: !Sub iotbutton_${IoTButtonDSN}
-
-  IoTPolicy:
-    Type: AWS::IoT::Policy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Action: iot:Publish
-          Effect: Allow
-          Resource: !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/iotbutton/${IoTButtonDSN}
-
-  IoTPolicyPrincipalAttachment:
-    Type: AWS::IoT::PolicyPrincipalAttachment
-    Properties:
-      PolicyName: !Ref IoTPolicy
-      Principal: !Ref CertificateARN
-
-  IoTThingPrincipalAttachment:
-    Type: AWS::IoT::ThingPrincipalAttachment
-    Properties:
-      Principal: !Ref CertificateARN
-      ThingName: !Ref IoTThing
-
-  IoTMessageNotiferFunction:
+  MessageNotiferFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: iot-message-notifer
+      FunctionName: message-notifer
       CodeUri: src/handlers/message_notifier
       Handler: index.handler
       Runtime: python3.6
       AutoPublishAlias: development
       Timeout: 60
       MemorySize: 128
-      Role: !GetAtt IoTMessageNotiferFunctionRole.Arn
+      Role: !GetAtt MessageNotiferFunctionRole.Arn
       Environment:
         Variables:
           CHATWORK_TOKEN: !Sub '${ChatWorkToken}'
           CHATWORK_ROOM_ID: !Sub '${ChatworkRoomId}'
+          SLACK_WEBHOOK_URL: !Sub '${SlackWebhookURL}'
           DATABASE_NAME: room_table
-      Events:
-        OverflowIngesterRule:
-          Type: IoTRule
-          Properties:
-            AwsIotSqlVersion: 2016-03-23
-            Sql: !Sub
-              - |
-                SELECT * FROM 'iotbutton/${IoTButtonDSN}'
-              - IoTTopicRuleGetThingShadowRoleArn: !GetAtt IoTTopicRuleGetThingShadowRole.Arn
 
-  IoTMessageNotiferFunctionRole:
+  MessageNotiferFunctionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: iot-message-notifer-function-role
+      RoleName: message-notifer-function-role
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -96,30 +54,6 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
 
-  IoTTopicRuleGetThingShadowRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub iot-topic-rule-get-thing-shadow-role
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - iot.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: !Sub /${AWS::StackName}/
-      Policies:
-        - PolicyName: !Sub iot-topic-rule-get-thing-shadow-role-policy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - iot:GetThingShadow
-                Resource: !Sub arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thing/*
-
   RoomTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -130,6 +64,4 @@ Resources:
       KeySchema:
         - AttributeName: device_id
           KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+      BillingMode: PAY_PER_REQUEST
