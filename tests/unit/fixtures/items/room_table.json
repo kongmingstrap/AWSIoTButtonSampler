@@ -1,0 +1,26 @@
+{
+  "state unlocked": [
+    {
+      "device_id": "1",
+      "state": "unlocked",
+      "message": "unlocked message",
+      "place_name": "place 01"
+    }
+  ],
+  "state locked": [
+    {
+      "device_id": "1",
+      "state": "locked",
+      "message": "locked message",
+      "place_name": "place 01"
+    }
+  ],
+  "another device": [
+    {
+      "device_id": "2",
+      "state": "locked",
+      "message": "locked message",
+      "place_name": "place 01"
+    }
+  ]
+}

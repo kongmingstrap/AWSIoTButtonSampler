@@ -1,0 +1,19 @@
+{
+  "TableName": "room_table",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "device_id",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "AttributeName": "device_id",
+      "KeyType": "HASH"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 1,
+    "WriteCapacityUnits": 1
+  }
+}
