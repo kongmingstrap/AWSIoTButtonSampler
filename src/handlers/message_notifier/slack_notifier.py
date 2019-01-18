@@ -10,7 +10,8 @@ class SlackNotifier(object):
                 'Content-Type': 'application/json; charset=utf-8'
             }
             payload = self.make_payload(message)
-            requests.post(api_endpoint, data=json.dumps(payload), headers=headers)
+            requests.post(
+                api_endpoint, data=json.dumps(payload), headers=headers)
         except Exception as e:
             print(str(e))
 
