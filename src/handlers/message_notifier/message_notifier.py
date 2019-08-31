@@ -4,56 +4,46 @@ import boto3
 
 from boto3.dynamodb.conditions import Key
 
+from logger.logger import Logger
 from slack_notifier import SlackNotifier
+
+logger = Logger().getLogger(__name__)
 
 
 class MessageNotifier(object):
     def __init__(self):
         self.dynamodb = boto3.resource('dynamodb')
 
-    def publish(self):
+    def publish(self, event: dict) -> dict:
         slack_webhook_url = os.environ['SLACK_WEBHOOK_URL']
         table_name = os.environ['DATABASE_NAME']
 
         try:
+            device_id = '1'
             table = self.dynamodb.Table(table_name)
             res = table.query(
-                KeyConditionExpression=Key('device_id').eq('1')
+                KeyConditionExpression=Key('device_id').eq(device_id)
             )['Items']
 
             if len(res) == 0:
+                logger.info(f'{device_id} is not found.')
                 return {}
 
             item = res[0]
 
-            place_name = item.get('place_name')
-            message = item.get('message')
-            state = item.get('state')
-
-            if state == 'locked':
-                message = f'{place_name} unlocked.'
-                state = 'unlocked'
-            else:
-                message = f'{place_name} locked.'
-                state = 'locked'
-
-            table.put_item(
-                Item={
-                    'device_id': '1',
-                    'state': state,
-                    'message': message,
-                    'place_name': place_name
-                }
-            )
+            slack_username = item.get('slack_username', '')
+            slack_text = item.get('slack_text', '')
+            slack_icon_emoji = item.get('slack_icon_emoji', '')
 
             slack_message = {
-                'slack_username': f'{place_name}',
-                'slack_text': message,
-                'slack_icon_emoji': ':fukkeikun:'
+                'slack_username': slack_username,
+                'slack_text': slack_text,
+                'slack_icon_emoji': slack_icon_emoji
             }
 
             SlackNotifier().publish(slack_webhook_url, slack_message)
 
             return slack_message
         except Exception as e:
-            print(str(e))
+            logger.error(f'Exception occurred: {e}', exc_info=True)
+            raise e

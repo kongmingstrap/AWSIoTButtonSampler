@@ -6,29 +6,31 @@ from slack_notifier import SlackNotifier
 
 class TestPublish(object):
     @pytest.mark.parametrize(
-        'dynamodb, expected', [
+        'dynamodb, event, expected', [
             (
                 (
                     [
-                        ['room_table', 'state unlocked']
+                        ['room_table', 'exist device']
                     ]
                 ),
+                {},
                 {
                     'slack_icon_emoji': ':fukkeikun:',
-                    'slack_text': 'place 01 locked.',
-                    'slack_username': 'place 01'
+                    'slack_text': 'taped button 01',
+                    'slack_username': 'user 01'
                 }
             ),
             (
                 (
                     [
-                        ['room_table', 'state locked']
+                        ['room_table', 'not exist params']
                     ]
                 ),
+                {},
                 {
-                    'slack_icon_emoji': ':fukkeikun:',
-                    'slack_text': 'place 01 unlocked.',
-                    'slack_username': 'place 01'
+                    'slack_icon_emoji': '',
+                    'slack_text': '',
+                    'slack_username': ''
                 }
             ),
             (
@@ -37,16 +39,36 @@ class TestPublish(object):
                         ['room_table', 'another device']
                     ]
                 ),
+                {},
                 {}
             )
-        ], indirect=['dynamodb']
-    )
-    def test_expected_args(self, dynamodb, expected, monkeypatch):
+        ], indirect=['dynamodb'])
+    def test_expected_args(self, dynamodb, event, expected, monkeypatch):
         monkeypatch.setattr(SlackNotifier, 'publish', lambda *_: True)
 
         f = MessageNotifier()
         f.dynamodb = dynamodb
 
-        actual = f.publish()
+        actual = f.publish(event)
 
         assert actual == expected
+
+    @pytest.mark.parametrize(
+        'dynamodb, event, expected', [
+            (
+                (
+                    [
+                        []
+                    ]
+                ),
+                None,
+                Exception
+            )
+        ])
+    def test_exception_args(self, dynamodb, event, expected, monkeypatch):
+        monkeypatch.setattr(SlackNotifier, 'publish', lambda *_: Exception)
+
+        f = MessageNotifier()
+
+        with pytest.raises(expected):
+            f.publish(event)

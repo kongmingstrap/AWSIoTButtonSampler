@@ -6,6 +6,36 @@ localstack-up:
 localstack-stop:
 	@docker-compose stop localstack
 
+build:
+	@for handler in $$(find src/layers -maxdepth 2 -type f -name 'Pipfile'); do \
+		package_dir=$$(dirname $$handler); \
+		pwd_dir=$$PWD; \
+		docker_name=lot-button-sampler-$$(basename $$package_dir); \
+		cd $$package_dir; \
+		mkdir -p python/lib/python3.7; \
+		pipenv lock --python $$(which python) --requirements > requirements.txt; \
+		docker image build --tag $$docker_name .; \
+		docker container run -it --name $$docker_name $$docker_name; \
+		rm requirements.txt; \
+		cd python/lib/python3.7; \
+		docker container cp $$docker_name:/workdir site-packages; \
+		docker container rm $$docker_name; \
+		docker image rm $$docker_name; \
+		cd $$pwd_dir; \
+	done
+
+build-for-mac:
+	@for handler in $$(find src/layers -maxdepth 2 -type f -name 'Pipfile'); do \
+		package_dir=$$(dirname $$handler); \
+		pwd_dir=$$PWD; \
+		docker_name=lot-button-sampler-$$(basename $$package_dir); \
+		cd $$package_dir; \
+		pipenv lock --python $$(which python) --requirements > requirements.txt; \
+		pip install -r requirements.txt -t python/lib/python3.7/site-packages; \
+		rm requirements.txt; \
+		cd $$pwd_dir; \
+	done
+
 lint:
 	@python -m flake8 \
 		src \
@@ -20,7 +50,7 @@ unit-test:
 		AWS_DEFAULT_REGION=ap-northeast-1 \
 		AWS_ACCESS_KEY_ID=dummy \
 		AWS_SECRET_ACCESS_KEY=dummy \
-		PYTHONPATH=$$python_path \
+		PYTHONPATH=src/layers/utils/python:$$python_path \
 			python -m pytest tests/unit/$$handler --cov-config=./setup.cfg --cov=$$proj -vv; \
 	done
 
@@ -44,6 +74,8 @@ deploy:
 .PHONY: \
 	localstack-up \
 	localstack-down \
+	build \
+	build-for-mac \
 	lint \
 	unit-test \
 	validate \

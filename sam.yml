@@ -8,38 +8,39 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<String>
     Default: SlackWebhookURL
 
+Globals:
+  Function:
+    Runtime: python3.7
+    Timeout: 60
+    MemorySize: 128
+    AutoPublishAlias: development
+    Layers:
+      - !Ref UtilsLayer
+
 Resources:
+  UtilsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: utils
+      Description: logger layer
+      ContentUri: src/layers/utils
+      CompatibleRuntimes:
+        - python3.7
+      RetentionPolicy: Retain
+
   MessageNotiferFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: message-notifer
       CodeUri: src/handlers/message_notifier
       Handler: index.handler
-      Runtime: python3.6
-      AutoPublishAlias: development
-      Timeout: 60
-      MemorySize: 128
-      Role: !GetAtt MessageNotiferFunctionRole.Arn
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
       Environment:
         Variables:
           SLACK_WEBHOOK_URL: !Sub '${SlackWebhookURL}'
-          DATABASE_NAME: room_table
-
-  MessageNotiferFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: message-notifer-function-role
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Path: !Sub /${AWS::StackName}/
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+          DATABASE_NAME: !Ref RoomTable
 
   RoomTable:
     Type: AWS::DynamoDB::Table
