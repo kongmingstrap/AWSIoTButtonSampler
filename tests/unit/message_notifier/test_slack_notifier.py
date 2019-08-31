@@ -1,6 +1,6 @@
 import pytest
 
-from botocore.vendored import requests
+import requests
 
 from slack_notifier import SlackNotifier
 

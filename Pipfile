@@ -12,6 +12,7 @@ ipython = "*"
 
 [packages]
 
+"requests" = "*"
 "boto3" = "*"
 pytest = "*"
 "flake8" = "*"

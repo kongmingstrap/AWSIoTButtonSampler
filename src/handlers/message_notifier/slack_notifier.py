@@ -1,6 +1,6 @@
 import json
 
-from botocore.vendored import requests
+import requests
 from logger.logger import Logger
 
 logger = Logger().getLogger(__name__)

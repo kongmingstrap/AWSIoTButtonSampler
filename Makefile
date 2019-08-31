@@ -58,7 +58,18 @@ validate:
 	@aws cloudformation validate-template \
 		--template-body file://sam.yml
 
-deploy:
+install:
+	@pip install requests -t src/handlers/message_notifier
+
+clean:
+	@rm -rf src/handlers/message_notifier/bin
+	rm -rf src/handlers/message_notifier/certifi*
+	rm -rf src/handlers/message_notifier/chardet*
+	rm -rf src/handlers/message_notifier/idna*
+	rm -rf src/handlers/message_notifier/requests*
+	rm -rf src/handlers/message_notifier/urllib3*
+
+deploy: install
 	@aws cloudformation package \
 						--template-file sam.yml \
 						--s3-bucket sam-artifacts-$$(aws sts get-caller-identity | jq .Account | sed 's/\"//g')-ap-northeast-1 \
@@ -71,6 +82,8 @@ deploy:
 						--role-arn arn:aws:iam::$$(aws sts get-caller-identity | jq .Account | sed 's/\"//g'):role/sam-deploy/sam-deploy-role \
 						--no-fail-on-empty-changeset
 
+	make clean
+
 .PHONY: \
 	localstack-up \
 	localstack-down \
@@ -79,4 +92,6 @@ deploy:
 	lint \
 	unit-test \
 	validate \
+	install \
+	clean \
 	deploy
