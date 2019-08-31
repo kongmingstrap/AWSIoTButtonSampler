@@ -11,11 +11,15 @@ class TestPublish(object):
             (
                 'https://example.com',
                 {
-                    'slack_username': '',
-                    'slack_text': '',
-                    'slack_icon_emoji': ''
+                    'slack_username': 'username',
+                    'slack_text': 'text',
+                    'slack_icon_emoji': 'icon_emoji'
                 },
-                None
+                {
+                    'username': 'username',
+                    'text': 'text',
+                    'icon_emoji': 'icon_emoji'
+                }
             )
         ])
     def test_expected_args(self, api_endpoint, message, expected, monkeypatch):
@@ -24,6 +28,20 @@ class TestPublish(object):
         f = SlackNotifier()
 
         assert f.publish(api_endpoint, message) == expected
+
+    @pytest.mark.parametrize(
+        'api_endpoint, message, expected', [
+            (
+                'https://example.com',
+                None,
+                Exception
+            )
+        ])
+    def test_exception_args(self, api_endpoint, message, expected):
+        f = SlackNotifier()
+
+        with pytest.raises(expected):
+            f.publish(api_endpoint, message)
 
 
 class TestMakePayload(object):
