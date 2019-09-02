@@ -1,7 +1,7 @@
 {
   "exist device": [
     {
-      "device_id": "1",
+      "device_id": "DEVICEIDEXAPMPLE",
       "slack_username": "user 01",
       "slack_text": "taped button 01",
       "slack_icon_emoji": ":fukkeikun:"
@@ -9,12 +9,12 @@
   ],
   "not exist params": [
     {
-      "device_id": "1"
+      "device_id": "DEVICEIDEXAPMPLE"
     }
   ],
   "another device": [
     {
-      "device_id": "2",
+      "device_id": "DEVICEIDEXAPMPLE-02",
       "slack_username": "user 02",
       "slack_text": "taped button 02",
       "slack_icon_emoji": ":fukkeikun:"

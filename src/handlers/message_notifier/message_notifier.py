@@ -19,7 +19,7 @@ class MessageNotifier(object):
         table_name = os.environ['DATABASE_NAME']
 
         try:
-            device_id = '1'
+            device_id = self.get_device_id_from_event(event)
             table = self.dynamodb.Table(table_name)
             res = table.query(
                 KeyConditionExpression=Key('device_id').eq(device_id)
@@ -47,3 +47,6 @@ class MessageNotifier(object):
         except Exception as e:
             logger.error(f'Exception occurred: {e}', exc_info=True)
             raise e
+
+    def get_device_id_from_event(self, event: dict) -> str:
+        return event['deviceInfo']['deviceId']
